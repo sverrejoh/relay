@@ -170,18 +170,20 @@ type RelayCompilerBinary = {
 
 export async function findRelayBinaryWithWarnings(
   outputChannel: OutputChannel,
+  rootPath?: string,
 ): Promise<RelayCompilerBinary | null> {
   const config = getConfig();
 
-  let rootPath = workspace.rootPath || process.cwd();
-  if (config.rootDirectory) {
-    rootPath = path.join(rootPath, config.rootDirectory);
-  }
+  const resolvedRootPath =
+    rootPath ??
+    (config.rootDirectory
+      ? path.join(workspace.rootPath || process.cwd(), config.rootDirectory)
+      : workspace.rootPath || process.cwd());
 
   outputChannel.appendLine(
-    `Searching for the relay-compiler starting at: ${rootPath}`,
+    `Searching for the relay-compiler starting at: ${resolvedRootPath}`,
   );
-  const relayBinaryResult = await findRelayCompilerBinary(rootPath);
+  const relayBinaryResult = await findRelayCompilerBinary(resolvedRootPath);
 
   if (config.pathToRelay) {
     outputChannel.appendLine(
@@ -233,6 +235,32 @@ export async function findRelayBinaryWithWarnings(
 
   if (relayBinaryResult.kind === 'compilerFound') {
     return {path: relayBinaryResult.path, version: relayBinaryResult.version};
+  }
+
+  return null;
+}
+
+export async function resolveRelayBinaryExecutionOptions(
+  outputChannel: OutputChannel,
+): Promise<{
+  rootPath: string;
+  binaryPath: string;
+  binaryVersion?: string;
+} | null> {
+  const config = getConfig();
+
+  const rootPath = config.rootDirectory
+    ? path.join(workspace.rootPath || process.cwd(), config.rootDirectory)
+    : workspace.rootPath || process.cwd();
+
+  const binary = await findRelayBinaryWithWarnings(outputChannel, rootPath);
+
+  if (binary) {
+    return {
+      rootPath,
+      binaryPath: binary.path,
+      binaryVersion: binary.version,
+    };
   }
 
   return null;

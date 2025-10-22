@@ -36,6 +36,14 @@ export class RelayTextDocumentContentProvider
 
   onDidChange?: Event<Uri> | undefined;
 
+  /**
+   * Clears cached schema when binary or configuration changes.
+   * The version check is done in the constructor, so we just clear the cache.
+   */
+  clearCache(): void {
+    this.cachedJsonSchema = undefined;
+  }
+
   provideTextDocumentContent(uri: Uri): ProviderResult<string> {
     if (uri.authority === PACKAGE_JSON_RELAY_CONFIG_SCHEMA_PATH) {
       return `{"properties": { "relay": { "$ref": "${RelayTextDocumentContentProvider.scheme}://${RELAY_CONFIG_SCHEMA_PATH}", "description": "Relay.js configuration" }}}`;

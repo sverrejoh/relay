@@ -12,15 +12,26 @@ import {
   createAndStartLanguageClient,
   killLanguageClient,
 } from '../languageClient';
+import {resolveRelayBinaryExecutionOptions} from '../utils/findRelayBinary';
 
-export function handleRestartLanguageServerCommand(
+export async function handleRestartLanguageServerCommand(
   context: RelayExtensionContext,
-): void {
+): Promise<void> {
   const config = getConfig();
 
   // Was the relay compiler running? Should we auto start it based on their config?
   const shouldRestartCompiler =
     Boolean(context.compilerTerminal) || config.autoStartCompiler;
+
+  // Re-resolve binary execution options with the latest configuration
+  const binaryExecutionOptions =
+    await resolveRelayBinaryExecutionOptions(context.primaryOutputChannel);
+
+  if (binaryExecutionOptions) {
+    context.relayBinaryExecutionOptions = binaryExecutionOptions;
+    // Clear cached JSON schema since binary/config may have changed
+    context.textDocumentContentProvider?.clearCache();
+  }
 
   const compilerKilledSuccessfully = killCompiler(context);
 

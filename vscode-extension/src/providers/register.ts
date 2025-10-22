@@ -13,10 +13,12 @@ import {
 } from './textDocumentContentProvider';
 
 export function registerProviders(context: RelayExtensionContext) {
+  const provider = new RelayTextDocumentContentProvider(context);
+  context.textDocumentContentProvider = provider;
   context.extensionContext.subscriptions.push(
     workspace.registerTextDocumentContentProvider(
       RelayTextDocumentContentProvider.scheme,
-      new RelayTextDocumentContentProvider(context),
+      provider,
     ),
   );
 }

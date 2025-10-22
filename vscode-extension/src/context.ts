@@ -7,6 +7,7 @@
 
 import {ExtensionContext, OutputChannel, StatusBarItem, Terminal} from 'vscode';
 import {LanguageClient} from 'vscode-languageclient/node';
+import type {RelayTextDocumentContentProvider} from './providers/textDocumentContentProvider';
 
 // Mutable object to pass around to command handlers so they
 // can reference the current state of the extension
@@ -27,6 +28,7 @@ export type RelayExtensionContext = {
   extensionContext: ExtensionContext;
   primaryOutputChannel: OutputChannel;
   compilerTerminal: Terminal | null;
+  textDocumentContentProvider: RelayTextDocumentContentProvider | null;
   relayBinaryExecutionOptions: {
     rootPath: string;
     binaryPath: string;

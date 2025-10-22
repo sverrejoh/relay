@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import path = require('path');
 import {ExtensionContext, window, workspace} from 'vscode';
 import {registerCommands} from './commands/register';
 import {registerProviders, registerNoopProviders} from './providers/register';
@@ -15,7 +14,7 @@ import {getConfig} from './config';
 import {RelayExtensionContext} from './context';
 import {createAndStartLanguageClient} from './languageClient';
 import {createStatusBarItem, intializeStatusBarItem} from './statusBarItem';
-import {findRelayBinaryWithWarnings} from './utils/findRelayBinary';
+import {resolveRelayBinaryExecutionOptions} from './utils/findRelayBinary';
 
 let relayExtensionContext: RelayExtensionContext | null = null;
 
@@ -32,14 +31,10 @@ async function buildRelayExtensionContext(
   extensionContext.subscriptions.push(lspOutputChannel);
   extensionContext.subscriptions.push(primaryOutputChannel);
 
-  let rootPath = workspace.rootPath || process.cwd();
-  if (config.rootDirectory) {
-    rootPath = path.join(rootPath, config.rootDirectory);
-  }
+  const binaryExecutionOptions =
+    await resolveRelayBinaryExecutionOptions(primaryOutputChannel);
 
-  const binary = await findRelayBinaryWithWarnings(primaryOutputChannel);
-
-  if (binary) {
+  if (binaryExecutionOptions) {
     return {
       statusBar,
       client: null,
@@ -47,11 +42,8 @@ async function buildRelayExtensionContext(
       lspOutputChannel,
       primaryOutputChannel,
       compilerTerminal: null,
-      relayBinaryExecutionOptions: {
-        rootPath,
-        binaryPath: binary.path,
-        binaryVersion: binary.version,
-      },
+      textDocumentContentProvider: null,
+      relayBinaryExecutionOptions: binaryExecutionOptions,
     };
   }
 
